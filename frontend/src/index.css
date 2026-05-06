@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    direction: rtl;
+    font-family: 'Heebo', 'Assistant', Arial, sans-serif;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+}
+
+/* Markdown prose RTL adjustments */
+.prose {
+  direction: rtl;
+  text-align: right;
+}
+
+.prose ul, .prose ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+.prose blockquote {
+  border-right: 4px solid #e2e8f0;
+  border-left: none;
+  padding-right: 1rem;
+  padding-left: 0;
+}

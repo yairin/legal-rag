@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip install anthropic cohere qdrant-client rank-bm25 tavily-python trafilatura pymupdf tiktoken httpx structlog pydantic-settings sse-starlette slowapi fastapi uvicorn python-multipart click tqdm)",
+      "Bash(python -c ' *)",
+      "Bash(python -m app.ingest.build_index)",
+      "Bash(python -m app.ingest.build_index --skip-context)",
+      "Bash(.venv/Scripts/python.exe -m pip install click tqdm anthropic cohere qdrant-client rank-bm25 tavily-python trafilatura pymupdf tiktoken httpx structlog pydantic-settings sse-starlette slowapi fastapi uvicorn python-multipart)",
+      "PowerShell(& \"C:\\\\Users\\\\yair\\\\AppData\\\\Local\\\\Python\\\\pythoncore-3.14-64\\\\python.exe\" -m uvicorn --version 2>&1)",
+      "Bash(gh --version)",
+      "Bash(git --version)",
+      "Bash(git config *)"
+    ]
+  }
+}

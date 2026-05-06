@@ -1,0 +1,10 @@
+{
+  "_comment": "Gold set for RAGAS evaluation. Add 30-50 Q+A+sources entries before running eval.",
+  "questions": [
+    {
+      "question": "מהן זכויות עובד שפוטר ללא סיבה?",
+      "ground_truth": "עובד שפוטר ללא סיבה מוצדקת זכאי לפיצויי פיטורים בשיעור של שכר חודשי לכל שנת עבודה, בהתאם לחוק פיצויי פיטורים תשכ\"ג-1963.",
+      "source_docs": []
+    }
+  ]
+}

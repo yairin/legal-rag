@@ -1,0 +1,49 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-multipart==0.0.20
+sse-starlette==2.1.3
+
+# Rate limiting
+slowapi==0.1.9
+
+# HTTP
+httpx==0.28.1
+
+# Logging
+structlog==24.4.0
+
+# Azure Document Intelligence
+azure-ai-documentintelligence==1.0.0
+
+# PDF fallback
+pymupdf==1.24.14
+
+# Embeddings + AI
+anthropic>=0.49.0
+# voyageai SDK incompatible with Python 3.14 — using REST API via httpx
+cohere>=5.13.5
+
+# Vector store
+qdrant-client==1.12.1
+
+# BM25
+rank-bm25==0.2.2
+
+# Web search / scraping
+tavily-python==0.5.0
+trafilatura==2.0.0
+
+# Eval
+ragas==0.2.6
+datasets==3.2.0
+pytest==8.3.4
+pytest-asyncio==0.25.0
+
+# Utilities
+python-dotenv==1.0.1
+tqdm==4.67.1
+click==8.1.8
+tiktoken==0.8.0

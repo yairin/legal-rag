@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: legal-rag-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    rootDir: backend
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: COHERE_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: AZURE_DI_ENDPOINT
+        sync: false
+      - key: AZURE_DI_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: TURNSTILE_SECRET
+        sync: false
+      - key: DAILY_TOKEN_BUDGET
+        value: "500000"
+      - key: ENVIRONMENT
+        value: production
