@@ -81,7 +81,6 @@ async def get_samples():
 
 
 @app.post("/api/chat")
-@limiter.limit("10/minute")
 async def chat(request: Request, body: ChatRequest = Body(...)):
     settings = get_settings()
 
