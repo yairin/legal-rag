@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://YOUR_RENDER_URL/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://legal-rag-wl5z.onrender.com/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
