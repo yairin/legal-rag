@@ -19,7 +19,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 import structlog
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -82,7 +82,7 @@ async def get_samples():
 
 @app.post("/api/chat")
 @limiter.limit("10/minute")
-async def chat(request: Request, body: ChatRequest):
+async def chat(request: Request, body: ChatRequest = Body(...)):
     settings = get_settings()
 
     # Turnstile verification
