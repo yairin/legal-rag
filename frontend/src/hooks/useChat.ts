@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { streamChat } from '../lib/api'
-import type { Message, SourceCard } from '../lib/types'
+import type { Message } from '../lib/types'
 
 function stripCiteTags(text: string): string {
   return text
@@ -15,7 +15,17 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<string>('')
-  const abortRef = useRef<AbortController | null>(null)
+
+
+  // Safety net: if loading gets stuck for >3 minutes, force-unlock
+  useEffect(() => {
+    if (!loading) return
+    const id = setTimeout(() => {
+      setLoading(false)
+      setStatus('')
+    }, 180_000)
+    return () => clearTimeout(id)
+  }, [loading])
 
   const clearMessages = useCallback(() => {
     setMessages([])
@@ -57,13 +67,16 @@ export function useChat() {
             )
           )
         } else if (event.type === 'sources') {
+          const elapsed = Date.now() - startTime
           setMessages(prev =>
             prev.map(m =>
               m.id === assistantId
-                ? { ...m, sources: event.sources, isStreaming: false }
+                ? { ...m, sources: event.sources, isStreaming: false, elapsedMs: elapsed }
                 : m
             )
           )
+          setLoading(false)
+          setStatus('')
         } else if (event.type === 'done') {
           const elapsed = Date.now() - startTime
           setMessages(prev =>
