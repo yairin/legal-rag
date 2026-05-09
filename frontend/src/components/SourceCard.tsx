@@ -74,9 +74,12 @@ export function SourceCard({ source }: Props) {
         )}
       </div>
 
-      {source.quote && (expanded || !hasLongQuote) && (
+      {source.quote && expanded && (
         <div className="border-t border-slate-100 px-3 py-2">
-          <blockquote className="border-r-2 border-brand-300 pr-3 text-slate-600 italic text-xs leading-relaxed">
+          <blockquote
+            dir="rtl"
+            className="border-r-2 border-brand-300 pr-3 text-slate-600 text-xs leading-relaxed"
+          >
             {source.quote}
           </blockquote>
         </div>
