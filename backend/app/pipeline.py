@@ -167,6 +167,17 @@ async def run_pipeline(question: str, history: list[dict] | None = None) -> Asyn
         yield {"type": "error", "message": "אירעה שגיאה בעיבוד השאלה. נסה שוב מאוחר יותר."}
 
 
+def _clean_pdf_title(source: str) -> str:
+    """Extract topic name from filename like '03 - פרק 3 – תנאי שירות.pdf'"""
+    import re
+    name = source.removesuffix(".pdf")
+    # Remove leading "NN - פרק N – " pattern
+    name = re.sub(r"^\d+\s*[-–]\s*פרק\s*\d+\s*[-–]\s*", "", name)
+    # Remove leading "NN - " pattern
+    name = re.sub(r"^\d+\s*[-–]\s*", "", name)
+    return name.strip() or source
+
+
 def _build_source_cards(
     verified_cites,
     parents: list[dict],
@@ -193,7 +204,7 @@ def _build_source_cards(
                 SourceCard(
                     source_id=source_id,
                     quote=cite_map[source_id],
-                    title=source,
+                    title=_clean_pdf_title(source),
                     filename=source,
                     page=page,
                 )
