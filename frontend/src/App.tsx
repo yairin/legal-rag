@@ -6,7 +6,7 @@ import { useChat } from './hooks/useChat'
 import { fetchSamples } from './lib/api'
 
 export default function App() {
-  const { messages, loading, status, sendMessage, clearMessages } = useChat()
+  const { messages, loading, status, sendMessage, stopMessage, clearMessages } = useChat()
   const [samples, setSamples] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -85,7 +85,7 @@ export default function App() {
               disabled={loading}
             />
           )}
-          <ChatInput onSend={sendMessage} disabled={loading} />
+          <ChatInput onSend={sendMessage} onStop={stopMessage} disabled={loading} />
           <p className="text-center text-[11px] text-slate-400">
             המידע מבוסס על מסמכי המרכז לשלטון מקומי ואינו תחליף לייעוץ משפטי.
           </p>

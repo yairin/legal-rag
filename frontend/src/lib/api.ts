@@ -21,12 +21,14 @@ export interface HistoryMessage {
 export async function* streamChat(
   question: string,
   history: HistoryMessage[] = [],
+  signal?: AbortSignal,
   turnstileToken?: string
 ): AsyncGenerator<SSEEvent> {
   const res = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question, history, turnstile_token: turnstileToken }),
+    signal,
   })
 
   if (!res.ok) {

@@ -2,10 +2,11 @@ import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
   onSend: (text: string) => void
+  onStop?: () => void
   disabled: boolean
 }
 
-export function ChatInput({ onSend, disabled }: Props) {
+export function ChatInput({ onSend, onStop, disabled }: Props) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const prevDisabled = useRef(disabled)
@@ -62,27 +63,33 @@ export function ChatInput({ onSend, disabled }: Props) {
                    placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
         dir="rtl"
       />
-      <button
-        type="submit"
-        disabled={disabled || !text.trim()}
-        aria-label="שלח"
-        className="shrink-0 rounded-xl bg-brand-500 p-2.5 text-white shadow
-                   transition-all hover:bg-brand-600 active:scale-95
-                   disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
-      >
-        {disabled ? (
-          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      {disabled && onStop ? (
+        <button
+          type="button"
+          onClick={onStop}
+          aria-label="עצור"
+          className="shrink-0 rounded-xl bg-red-500 p-2.5 text-white shadow
+                     transition-all hover:bg-red-600 active:scale-95"
+        >
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="1" />
           </svg>
-        ) : (
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={disabled || !text.trim()}
+          aria-label="שלח"
+          className="shrink-0 rounded-xl bg-brand-500 p-2.5 text-white shadow
+                     transition-all hover:bg-brand-600 active:scale-95
+                     disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+        >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
               d="M12 19l-7-7 7-7m8 7H5" />
           </svg>
-        )}
-      </button>
+        </button>
+      )}
     </form>
   )
 }

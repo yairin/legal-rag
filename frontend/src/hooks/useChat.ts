@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { streamChat } from '../lib/api'
 import type { Message } from '../lib/types'
 
@@ -10,6 +10,7 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<string>('')
+  const abortRef = useRef<AbortController | null>(null)
 
 
   // Safety net: if loading gets stuck for >3 minutes, force-unlock
@@ -44,13 +45,16 @@ export function useChat() {
       isStreaming: true,
     }
 
+    const abort = new AbortController()
+    abortRef.current = abort
+
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setLoading(true)
     setStatus('מתחיל עיבוד...')
     const startTime = Date.now()
 
     try {
-      for await (const event of streamChat(question, history)) {
+      for await (const event of streamChat(question, history, abort.signal)) {
         if (event.type === 'status') {
           setStatus(event.message)
         } else if (event.type === 'delta') {
@@ -94,19 +98,38 @@ export function useChat() {
           )
         }
       }
-    } catch {
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === assistantId
-            ? { ...m, text: 'אירעה שגיאה בחיבור לשרת.', isStreaming: false }
-            : m
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantId
+              ? { ...m, text: 'אירעה שגיאה בחיבור לשרת.', isStreaming: false }
+              : m
+          )
         )
-      )
+      }
     } finally {
+      abortRef.current = null
       setLoading(false)
       setStatus('')
     }
   }, [loading, messages])
 
-  return { messages, loading, status, sendMessage, clearMessages }
+  const stopMessage = useCallback(() => {
+    if (!abortRef.current) return
+    abortRef.current.abort()
+    setMessages(prev => {
+      const streaming = prev.find(m => m.isStreaming)
+      if (!streaming) return prev
+      return prev.map(m =>
+        m.isStreaming
+          ? { ...m, isStreaming: false, text: m.text + '\n\n_המענה הופסק באמצע._' }
+          : m
+      )
+    })
+    setLoading(false)
+    setStatus('')
+  }, [])
+
+  return { messages, loading, status, sendMessage, stopMessage, clearMessages }
 }
