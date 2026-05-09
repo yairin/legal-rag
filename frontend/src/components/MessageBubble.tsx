@@ -4,6 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import { SourceCard } from './SourceCard'
 import type { Message } from '../lib/types'
 
+function stripCiteTags(text: string): string {
+  // Remove complete cite blocks (tag + content + closing tag)
+  let result = text.replace(/<cite[^>]*>[\s\S]*?<\/cite>/g, '')
+  // Hide any unclosed cite block still streaming (from <cite to end of string)
+  result = result.replace(/<cite[\s\S]*$/, '')
+  // Remove any orphaned closing tags
+  result = result.replace(/<\/cite>/g, '')
+  return result
+}
+
 interface Props {
   message: Message
   status?: string
@@ -33,7 +43,7 @@ export function MessageBubble({ message, status }: Props) {
         {message.text ? (
           <div className="prose prose-slate max-w-none text-sm leading-relaxed">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {message.text}
+              {stripCiteTags(message.text)}
             </ReactMarkdown>
             {message.isStreaming && (
               <span className="inline-block h-4 w-0.5 animate-pulse bg-brand-400 align-text-bottom ms-0.5 rounded-full" />

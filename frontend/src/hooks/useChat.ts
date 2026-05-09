@@ -2,16 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { streamChat } from '../lib/api'
 import type { Message } from '../lib/types'
 
-function stripCiteTags(text: string): string {
-  // Remove complete cite blocks including their content
-  let result = text.replace(/<cite[^>]*>[\s\S]*?<\/cite>/g, '')
-  // Remove any remaining open/close tags (partial streaming chunks)
-  result = result.replace(/<cite[^>]*>/g, '')
-  result = result.replace(/<\/cite>/g, '')
-  // Remove partial opening tag at end of chunk (e.g. "<cite sour")
-  result = result.replace(/<cite[^>]*$/, '')
-  return result
-}
 
 let _idCounter = 0
 const uid = () => String(++_idCounter)
@@ -67,13 +57,13 @@ export function useChat() {
           setStatus('')
           setMessages(prev =>
             prev.map(m =>
-              m.id === assistantId ? { ...m, text: m.text + stripCiteTags(event.text) } : m
+              m.id === assistantId ? { ...m, text: m.text + event.text } : m
             )
           )
         } else if (event.type === 'replace') {
           setMessages(prev =>
             prev.map(m =>
-              m.id === assistantId ? { ...m, text: stripCiteTags(event.text) } : m
+              m.id === assistantId ? { ...m, text: event.text } : m
             )
           )
         } else if (event.type === 'sources') {
