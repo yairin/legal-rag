@@ -35,6 +35,11 @@ export function useChat() {
   const sendMessage = useCallback(async (question: string) => {
     if (loading) return
 
+    const history = messages
+      .filter(m => !m.isStreaming && m.text)
+      .slice(-10)
+      .map(m => ({ role: m.role, text: m.text }))
+
     const userMsg: Message = { id: uid(), role: 'user', text: question }
     const assistantId = uid()
     const assistantMsg: Message = {
@@ -50,7 +55,7 @@ export function useChat() {
     const startTime = Date.now()
 
     try {
-      for await (const event of streamChat(question)) {
+      for await (const event of streamChat(question, history)) {
         if (event.type === 'status') {
           setStatus(event.message)
         } else if (event.type === 'delta') {
@@ -106,7 +111,7 @@ export function useChat() {
       setLoading(false)
       setStatus('')
     }
-  }, [loading])
+  }, [loading, messages])
 
   return { messages, loading, status, sendMessage, clearMessages }
 }

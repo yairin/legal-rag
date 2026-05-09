@@ -55,7 +55,7 @@ class SourceCard:
 
 
 
-async def run_pipeline(question: str) -> AsyncGenerator[dict, None]:
+async def run_pipeline(question: str, history: list[dict] | None = None) -> AsyncGenerator[dict, None]:
     """
     Async generator that yields SSE-ready dicts:
       {"type": "delta", "text": "..."}          — streaming text chunk
@@ -67,8 +67,9 @@ async def run_pipeline(question: str) -> AsyncGenerator[dict, None]:
 
     try:
         # 1. Route + expand in one Haiku call
+        history = history or []
         yield {"type": "status", "message": "מנתח שאלה..."}
-        chitchat_reply, variants = await analyze_query(question)
+        chitchat_reply, variants = await analyze_query(question, history)
 
         if chitchat_reply is not None:
             yield {"type": "delta", "text": chitchat_reply}
@@ -136,7 +137,7 @@ async def run_pipeline(question: str) -> AsyncGenerator[dict, None]:
         # 9. Stream answer (collect for citation verification)
         yield {"type": "status", "message": "מנסח תשובה..."}
         full_text = ""
-        async for delta in stream_answer(system, user_msg, model):
+        async for delta in stream_answer(system, user_msg, model, history):
             full_text += delta
             yield {"type": "delta", "text": delta}
 
@@ -146,7 +147,7 @@ async def run_pipeline(question: str) -> AsyncGenerator[dict, None]:
         # If no verified citations but we streamed content → retry once (non-streaming)
         if not verified_cites and (parents or web_results):
             log.info("citation_retry")
-            retry_text, _ = await complete_answer(system, user_msg, model)
+            retry_text, _ = await complete_answer(system, user_msg, model, history)
             cleaned_text, verified_cites = process_citations(retry_text, parents, web_results)
             # If retry produced verified cites, re-emit full text as a replacement
             if verified_cites:

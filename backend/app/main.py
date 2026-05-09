@@ -61,8 +61,13 @@ app.add_middleware(
 _SAMPLES_PATH = Path(__file__).parent.parent / "data" / "samples.json"
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
+class HistoryMessage(BaseModel):
+    role: str
+    text: str
+
 class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=1000)
+    history: list[HistoryMessage] = Field(default_factory=list)
     turnstile_token: Optional[str] = Field(None)
 
 
@@ -97,10 +102,12 @@ async def chat(request: Request, body: ChatRequest = Body(...)):
 
     log.info("chat_request", question_len=len(question))
 
+    history = [{"role": m.role, "text": m.text} for m in body.history[-10:]]
+
     async def event_generator():
         token_count = 0
         try:
-            async for event in run_pipeline(question):
+            async for event in run_pipeline(question, history):
                 if event["type"] == "delta":
                     token_count += len(event["text"].split())
                 yield {

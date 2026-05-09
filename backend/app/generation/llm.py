@@ -24,10 +24,22 @@ def _retry_wait(attempt: int) -> float:
     return min(30.0 * (attempt + 1), 60.0)
 
 
+def _build_messages(user_message: str, history: list[dict] | None) -> list[dict]:
+    messages = []
+    for turn in (history or [])[-6:]:
+        role = turn.get("role", "user")
+        text = turn.get("text", "")
+        if text:
+            messages.append({"role": role, "content": text})
+    messages.append({"role": "user", "content": user_message})
+    return messages
+
+
 async def stream_answer(
     system_prompt: str,
     user_message: str,
     model: str,
+    history: list[dict] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Async generator that yields text delta strings.
@@ -35,6 +47,7 @@ async def stream_answer(
     """
     settings = get_settings()
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    messages = _build_messages(user_message, history)
 
     for attempt in range(_MAX_ATTEMPTS):
         try:
@@ -42,7 +55,7 @@ async def stream_answer(
                 model=model,
                 max_tokens=_MAX_OUTPUT_TOKENS,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_message}],
+                messages=messages,
             ) as stream:
                 async for text in stream.text_stream:
                     yield text
@@ -59,6 +72,7 @@ async def complete_answer(
     system_prompt: str,
     user_message: str,
     model: str,
+    history: list[dict] | None = None,
 ) -> tuple[str, int]:
     """
     Non-streaming call. Returns (full_text, total_tokens).
@@ -66,6 +80,7 @@ async def complete_answer(
     """
     settings = get_settings()
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    messages = _build_messages(user_message, history)
 
     for attempt in range(_MAX_ATTEMPTS):
         try:
@@ -73,7 +88,7 @@ async def complete_answer(
                 model=model,
                 max_tokens=_MAX_OUTPUT_TOKENS,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_message}],
+                messages=messages,
             )
             text = response.content[0].text
             total_tokens = response.usage.input_tokens + response.usage.output_tokens

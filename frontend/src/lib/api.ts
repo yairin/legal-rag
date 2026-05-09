@@ -13,14 +13,20 @@ export async function fetchSamples(): Promise<string[]> {
   }
 }
 
+export interface HistoryMessage {
+  role: 'user' | 'assistant'
+  text: string
+}
+
 export async function* streamChat(
   question: string,
+  history: HistoryMessage[] = [],
   turnstileToken?: string
 ): AsyncGenerator<SSEEvent> {
   const res = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question, turnstile_token: turnstileToken }),
+    body: JSON.stringify({ question, history, turnstile_token: turnstileToken }),
   })
 
   if (!res.ok) {
