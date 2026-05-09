@@ -162,11 +162,17 @@ async def run_pipeline(question: str, history: list[dict] | None = None) -> Asyn
     except anthropic.RateLimitError:
         log.warning("pipeline_rate_limit")
         yield {"type": "error", "message": "השרת עמוס כרגע. המתן מספר שניות ונסה שוב."}
+    except anthropic.BadRequestError as exc:
+        msg = str(exc)
+        if "credit balance" in msg or "too low" in msg:
+            log.error("pipeline_no_credits")
+            yield {"type": "error", "message": "השירות אינו זמין כרגע עקב בעיית חיוב. אנא פנה למנהל המערכת."}
+        else:
+            log.exception("pipeline_bad_request", error=msg)
+            yield {"type": "error", "message": "אירעה שגיאה בעיבוד השאלה. נסה שוב מאוחר יותר."}
     except Exception as exc:
-        import traceback
-        tb = traceback.format_exc()
-        log.exception("pipeline_error", error=str(exc), traceback=tb)
-        yield {"type": "error", "message": f"שגיאה: {type(exc).__name__}: {str(exc)[:200]}"}
+        log.exception("pipeline_error", error=str(exc))
+        yield {"type": "error", "message": "אירעה שגיאה בעיבוד השאלה. נסה שוב מאוחר יותר."}
 
 
 def _clean_pdf_title(source: str) -> str:
