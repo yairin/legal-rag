@@ -163,8 +163,10 @@ async def run_pipeline(question: str, history: list[dict] | None = None) -> Asyn
         log.warning("pipeline_rate_limit")
         yield {"type": "error", "message": "השרת עמוס כרגע. המתן מספר שניות ונסה שוב."}
     except Exception as exc:
-        log.exception("pipeline_error", error=str(exc))
-        yield {"type": "error", "message": "אירעה שגיאה בעיבוד השאלה. נסה שוב מאוחר יותר."}
+        import traceback
+        tb = traceback.format_exc()
+        log.exception("pipeline_error", error=str(exc), traceback=tb)
+        yield {"type": "error", "message": f"שגיאה: {type(exc).__name__}: {str(exc)[:200]}"}
 
 
 def _clean_pdf_title(source: str) -> str:
