@@ -16,12 +16,12 @@ from app.config import get_settings
 log = structlog.get_logger(__name__)
 
 _MAX_OUTPUT_TOKENS = 2048
-_MAX_ATTEMPTS = 2
+_MAX_ATTEMPTS = 3
 
 
 def _retry_wait(attempt: int) -> float:
-    """10s then 20s — fail fast."""
-    return 10.0 * (attempt + 1)
+    """Wait for rate limit window: 15s, 60s, 60s."""
+    return 15.0 if attempt == 0 else 60.0
 
 
 def _build_messages(user_message: str, history: list[dict] | None) -> list[dict]:
