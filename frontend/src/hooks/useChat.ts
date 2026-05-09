@@ -3,9 +3,14 @@ import { streamChat } from '../lib/api'
 import type { Message } from '../lib/types'
 
 function stripCiteTags(text: string): string {
-  return text
-    .replace(/<cite\s+source="[^"]*">/g, '')
-    .replace(/<\/cite>/g, '')
+  // Remove complete cite blocks including their content
+  let result = text.replace(/<cite[^>]*>[\s\S]*?<\/cite>/g, '')
+  // Remove any remaining open/close tags (partial streaming chunks)
+  result = result.replace(/<cite[^>]*>/g, '')
+  result = result.replace(/<\/cite>/g, '')
+  // Remove partial opening tag at end of chunk (e.g. "<cite sour")
+  result = result.replace(/<cite[^>]*$/, '')
+  return result
 }
 
 let _idCounter = 0
