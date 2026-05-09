@@ -22,7 +22,7 @@ export function SourceCard({ source }: Props) {
 
   const label = source.url
     ? cleanTitle(source.title, source.url)
-    : `${source.filename ?? source.title}${source.page ? ` — עמוד ${source.page}` : ''}`
+    : source.title
 
   const hasLongQuote = source.quote && source.quote.length > 120
 
