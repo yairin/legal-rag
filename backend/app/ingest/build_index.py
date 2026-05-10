@@ -54,7 +54,8 @@ def _save_bm25_corpus(children: list[Chunk]) -> None:
 @click.option("--pdf-dir", default="data/pdfs", help="Directory with PDFs to ingest")
 @click.option("--skip-context", is_flag=True, default=False, help="Skip Haiku contextualisation")
 @click.option("--no-azure", is_flag=True, default=False, help="Force PyMuPDF (no Azure DI)")
-def main(pdf_dir: str, skip_context: bool, no_azure: bool) -> None:
+@click.option("--fresh", is_flag=True, default=False, help="Delete existing index and start fresh")
+def main(pdf_dir: str, skip_context: bool, no_azure: bool, fresh: bool) -> None:
     settings = get_settings()
     pdf_path = Path(pdf_dir)
     pdfs = sorted(pdf_path.glob("*.pdf"))
@@ -62,8 +63,14 @@ def main(pdf_dir: str, skip_context: bool, no_azure: bool) -> None:
         click.echo(f"No PDFs found in {pdf_dir}")
         return
 
+    if fresh:
+        for f in [PARENTS_STORE, BM25_CORPUS]:
+            if f.exists():
+                f.unlink()
+                click.echo(f"Deleted {f}")
+
     click.echo(f"Found {len(pdfs)} PDFs. Initialising Qdrant collection…")
-    init_collection()
+    init_collection(fresh=fresh)
 
     all_parents: list[Parent] = []
     all_children: list[Chunk] = []

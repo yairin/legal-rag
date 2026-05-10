@@ -73,18 +73,48 @@ def _load_azure(path: Path) -> list[PageText]:
 
 
 def _load_pymupdf(path: Path) -> list[PageText]:
+    """
+    Word-level RTL extraction: sort words right-to-left within each line,
+    blocks top-to-bottom. Fixes Hebrew PDFs stored in visual (LTR) order.
+    """
     import fitz  # pymupdf
+    from itertools import groupby
 
     doc = fitz.open(str(path))
     pages: list[PageText] = []
 
     for i, page in enumerate(doc, start=1):
-        # Use "dict" extraction to respect RTL text order
-        blocks = page.get_text("blocks", sort=True)
-        text = "\n".join(b[4].strip() for b in blocks if b[4].strip())
+        # words: (x0, y0, x1, y1, word, block_no, line_no, word_no)
+        words = page.get_text("words")
+        if not words:
+            continue
+
+        # Find top y0 per block for top-to-bottom block ordering
+        block_top: dict[int, float] = {}
+        for w in words:
+            bn = w[5]
+            block_top[bn] = min(block_top.get(bn, w[1]), w[1])
+
+        # Sort: block top-to-bottom, line top-to-bottom, word right-to-left
+        words_sorted = sorted(
+            words,
+            key=lambda w: (block_top[w[5]], w[6], -w[0]),
+        )
+
+        line_texts: list[str] = []
+        prev_block = None
+        for (bn, ln), grp in groupby(words_sorted, key=lambda w: (w[5], w[6])):
+            if prev_block is not None and bn != prev_block:
+                line_texts.append("")  # blank line between blocks
+            prev_block = bn
+            line_text = " ".join(w[4] for w in grp)
+            if line_text.strip():
+                line_texts.append(line_text)
+
+        text = "\n".join(line_texts).strip()
         if text:
             pages.append(PageText(page=i, text=text))
 
     doc.close()
-    log.info("pymupdf_loaded", path=path.name, pages=len(pages))
+    log.info("pymupdf_rtl_loaded", path=path.name, pages=len(pages))
     return pages

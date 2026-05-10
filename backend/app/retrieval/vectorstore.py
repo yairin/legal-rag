@@ -53,20 +53,25 @@ def _get_client() -> QdrantClient:
     return _client
 
 
-def init_collection() -> None:
+def init_collection(fresh: bool = False) -> None:
     client = _get_client()
     settings = get_settings()
     col = settings.collection_name
 
     existing = [c.name for c in client.get_collections().collections]
-    if col not in existing:
-        client.create_collection(
-            collection_name=col,
-            vectors_config=VectorParams(size=_VECTOR_DIM, distance=Distance.COSINE),
-        )
-        log.info("collection_created", name=col)
-    else:
-        log.info("collection_exists", name=col)
+    if col in existing:
+        if fresh:
+            client.delete_collection(col)
+            log.info("collection_deleted", name=col)
+        else:
+            log.info("collection_exists", name=col)
+            return
+
+    client.create_collection(
+        collection_name=col,
+        vectors_config=VectorParams(size=_VECTOR_DIM, distance=Distance.COSINE),
+    )
+    log.info("collection_created", name=col)
 
 
 def upsert_chunks(children: list[Chunk], embeddings: list[list[float]]) -> None:
@@ -111,19 +116,39 @@ def _dense_search(query_vector: list[float], top_k: int) -> list[tuple[str, floa
     return [(r.payload["chunk_id"], r.score) for r in results]
 
 
+_HE_SUFFIXES = ("ים", "ות", "יות", "יים", "ני", "נית", "תי", "תית", "ות", "י", "ה", "ו", "ן", "ת", "ך")
+
+
+def _he_tokenize(text: str) -> list[str]:
+    """
+    Tokenize Hebrew text and add stemmed variants.
+    For each token, also emit a version with common suffixes stripped,
+    so 'מצילי' also matches queries for 'מציל'.
+    """
+    tokens = text.split()
+    expanded: list[str] = []
+    for tok in tokens:
+        expanded.append(tok)
+        for suf in _HE_SUFFIXES:
+            if tok.endswith(suf) and len(tok) - len(suf) >= 2:
+                expanded.append(tok[: -len(suf)])
+                break
+    return expanded
+
+
 @lru_cache(maxsize=1)
 def _load_bm25() -> tuple[BM25Okapi, list[dict]]:
     if not BM25_CORPUS_PATH.exists():
         raise FileNotFoundError(f"BM25 corpus not found: {BM25_CORPUS_PATH}")
     with open(BM25_CORPUS_PATH, "rb") as fh:
         corpus: list[dict] = pickle.load(fh)
-    tokenized = [doc["text"].split() for doc in corpus]
+    tokenized = [_he_tokenize(doc["text"]) for doc in corpus]
     return BM25Okapi(tokenized), corpus
 
 
 def _bm25_search(query: str, top_k: int) -> list[tuple[str, float]]:
     bm25, corpus = _load_bm25()
-    scores = bm25.get_scores(query.split())
+    scores = bm25.get_scores(_he_tokenize(query))
     top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
     return [(corpus[i]["chunk_id"], float(scores[i])) for i in top_indices]
 
