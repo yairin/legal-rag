@@ -24,8 +24,6 @@ export function SourceCard({ source }: Props) {
     ? cleanTitle(source.title, source.url)
     : source.title
 
-  const hasLongQuote = source.quote && source.quote.length > 120
-
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50 overflow-hidden text-sm">
       <div className="flex items-center gap-2 px-3 py-2">
